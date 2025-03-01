@@ -7,7 +7,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float jumpForce = 5f;
     [SerializeField] private float crouchHeight = 0.5f;
     [SerializeField] private LayerMask groundLayer; // Слои, считающиеся землёй
-    [SerializeField] private float groundCheckDistance = 0.3f; // Расстояние проверки земли
+    [SerializeField] private float groundCheckDistance = 0.5f; // Расстояние проверки земли
     
     [Header("Components")]
     [SerializeField] private Transform cameraHolder;
@@ -54,8 +54,8 @@ public class PlayerController : MonoBehaviour
             rb.linearVelocity = velocity;
         }
 
-        // Прыжок
-        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
+        // Проверка нажатия пробела для прыжка
+        if (Input.GetKeyDown(KeyCode.Space) && IsGrounded())
         {
             rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
         }
@@ -77,5 +77,16 @@ public class PlayerController : MonoBehaviour
                 isCrouching = false;
             }
         }
+    }
+
+    private bool IsGrounded()
+    {
+        // Увеличим длину луча и изменим начальную точку
+        float rayLength = 1.1f;
+        Vector3 rayStart = transform.position + Vector3.up * 0.1f; // Немного выше центра объекта
+        
+        // Используем raycast вместо checksphere для более точной проверки
+        bool grounded = Physics.Raycast(rayStart, Vector3.down, rayLength, groundLayer);
+        return grounded;
     }
 } 
