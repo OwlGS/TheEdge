@@ -77,20 +77,36 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    private void OnCollisionEnter(Collision collision)
+    {
+        // Проверяем, что столкновение произошло со стеной (угол больше 45 градусов)
+        foreach (ContactPoint contact in collision.contacts)
+        {
+            float angle = Vector3.Angle(contact.normal, Vector3.up);
+            if (angle > 45f)
+            {
+                // Обнуляем скорость в направлении удара
+                Vector3 normalVelocity = Vector3.Project(airVelocity, contact.normal);
+                airVelocity -= normalVelocity;
+                break;
+            }
+        }
+    }
+
     private void FixedUpdate()
     {
         if (isGrounded)
         {
             // Применяем движение только на земле
             Vector3 movement = moveDirection * moveSpeed;
-            rb.linearVelocity = new Vector3(movement.x, rb.linearVelocity.y, movement.z);
+            rb.velocity = new Vector3(movement.x, rb.velocity.y, movement.z);
             // Обновляем сохраненную скорость в воздухе
-            airVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
+            airVelocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
         }
         else
         {
             // В воздухе сохраняем горизонтальную скорость
-            rb.linearVelocity = new Vector3(airVelocity.x, rb.linearVelocity.y, airVelocity.z);
+            rb.velocity = new Vector3(airVelocity.x, rb.velocity.y, airVelocity.z);
         }
     }
 }
