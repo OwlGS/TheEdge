@@ -8,7 +8,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private float jumpForce = 5f;
     [SerializeField] private float crouchHeight = 0.5f;
-    [SerializeField] private Transform cameraTransform; // Ссылка на камеру
+    [SerializeField] private Transform cameraTransform;
     
     private Rigidbody rb;
     private Vector3 moveDirection;
@@ -16,35 +16,41 @@ public class PlayerMovement : MonoBehaviour
     private float originalHeight;
     private bool isCrouching;
     private CapsuleCollider capsuleCollider;
-    private Vector3 airVelocity; // Сохраняем скорость в воздухе
+    private Vector3 currentVelocity;
+    private GravityController gravityController;
+    private bool wasGroundedBeforeGravityToggle = true;
 
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
         capsuleCollider = GetComponentInChildren<CapsuleCollider>();
         originalHeight = capsuleCollider.height;
+        gravityController = GetComponent<GravityController>();
         
-        // Если камера не назначена, найти главную камеру
         if (cameraTransform == null)
             cameraTransform = Camera.main.transform;
     }
 
     private void Update()
     {
-        // Ground check
-        isGrounded = Physics.Raycast(transform.position, Vector3.down, 1.1f);
+        bool wasGrounded = isGrounded;
+        isGrounded = rb.useGravity && Physics.Raycast(transform.position, Vector3.down, 1.1f);
+
+        // Сохраняем полную скорость при изменении состояния гравитации
+        if (rb.useGravity != gravityController.IsGravityEnabled)
+        {
+            currentVelocity = rb.linearVelocity;
+        }
         
-        // Movement input только если на земле
+        // Управление движением только на земле
         if (isGrounded)
         {
             float horizontalInput = Input.GetAxisRaw("Horizontal");
             float verticalInput = Input.GetAxisRaw("Vertical");
 
-            // Преобразуем ввод в направление относительно камеры
             Vector3 forward = cameraTransform.forward;
             Vector3 right = cameraTransform.right;
             
-            // Обнуляем Y компоненту, чтобы движение было только в горизонтальной плоскости
             forward.y = 0;
             right.y = 0;
             forward.Normalize();
@@ -53,11 +59,10 @@ public class PlayerMovement : MonoBehaviour
             moveDirection = (forward * verticalInput + right * horizontalInput).normalized;
         }
 
-        // Jump
+        // Jump только при включенной гравитации
         if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
         {
-            // Сохраняем текущую горизонтальную скорость перед прыжком
-            airVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
+            currentVelocity = rb.linearVelocity;
             rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
         }
 
@@ -79,15 +84,13 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        // Проверяем, что столкновение произошло со стеной (угол больше 45 градусов)
         foreach (ContactPoint contact in collision.contacts)
         {
             float angle = Vector3.Angle(contact.normal, Vector3.up);
             if (angle > 45f)
             {
-                // Обнуляем скорость в направлении удара
-                Vector3 normalVelocity = Vector3.Project(airVelocity, contact.normal);
-                airVelocity -= normalVelocity;
+                Vector3 normalVelocity = Vector3.Project(currentVelocity, contact.normal);
+                currentVelocity -= normalVelocity;
                 break;
             }
         }
@@ -97,16 +100,20 @@ public class PlayerMovement : MonoBehaviour
     {
         if (isGrounded)
         {
-            // Применяем движение только на земле
+            // На земле с гравитацией
             Vector3 movement = moveDirection * moveSpeed;
-            rb.velocity = new Vector3(movement.x, rb.velocity.y, movement.z);
-            // Обновляем сохраненную скорость в воздухе
-            airVelocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
+            rb.linearVelocity = new Vector3(movement.x, rb.linearVelocity.y, movement.z);
+            currentVelocity = rb.linearVelocity;
+        }
+        else if (!rb.useGravity)
+        {
+            // В невесомости сохраняем полную скорость
+            rb.linearVelocity = currentVelocity;
         }
         else
         {
-            // В воздухе сохраняем горизонтальную скорость
-            rb.velocity = new Vector3(airVelocity.x, rb.velocity.y, airVelocity.z);
+            // В воздухе с гравитацией сохраняем горизонтальную скорость
+            rb.linearVelocity = new Vector3(currentVelocity.x, rb.linearVelocity.y, currentVelocity.z);
         }
     }
 }

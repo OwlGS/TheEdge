@@ -6,6 +6,8 @@ public class GravityController : MonoBehaviour
     private Rigidbody rb;
     private bool isGravityEnabled = true;
 
+    public bool IsGravityEnabled => isGravityEnabled;
+
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -23,10 +25,5 @@ public class GravityController : MonoBehaviour
     {
         isGravityEnabled = !isGravityEnabled;
         rb.useGravity = isGravityEnabled;
-        
-        if (!isGravityEnabled)
-        {
-            rb.linearVelocity = Vector3.zero;
-        }
     }
 }
