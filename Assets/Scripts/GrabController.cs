@@ -23,6 +23,8 @@ public class GrabController : MonoBehaviour
     private Vector3 grabPoint;
     private Vector3 grabNormal;
     private bool wasUsingGravity;
+    private bool wasMovingUp;
+    private Vector3 lastVelocity;
 
     private void Start()
     {
@@ -30,6 +32,8 @@ public class GrabController : MonoBehaviour
         mainCamera = Camera.main;
         playerMovement = GetComponent<PlayerMovement>();
         wasUsingGravity = playerRb.useGravity;
+        wasMovingUp = false;
+        lastVelocity = Vector3.zero;
         
         if (handleLayer == 0)
         {
@@ -54,11 +58,33 @@ public class GrabController : MonoBehaviour
         {
             if (!playerRb.useGravity)
             {
-                // При отключении гравитации обнуляем скорость
-                StopMovement();
+                // Если до этого двигались вверх или уже были в состоянии подъема
+                if (lastVelocity.y > 0 || wasMovingUp)
+                {
+                    // Полностью останавливаем движение
+                    StopMovement();
+                    wasMovingUp = false;
+                }
+                else
+                {
+                    // Сохраняем только горизонтальное движение
+                    Vector3 horizontalVelocity = playerRb.linearVelocity;
+                    horizontalVelocity.y = 0;
+                    playerRb.linearVelocity = horizontalVelocity;
+                }
             }
+            else
+            {
+                // Запоминаем направление движения перед включением гравитации
+                wasMovingUp = playerRb.linearVelocity.y > 0;
+            }
+            
+            lastVelocity = playerRb.linearVelocity;
             wasUsingGravity = playerRb.useGravity;
         }
+
+        // Сохраняем текущую скорость для следующей проверки
+        lastVelocity = playerRb.linearVelocity;
 
         // Проверяем наличие поручней рядом с игроком
         Collider[] nearbyHandles = Physics.OverlapSphere(transform.position, grabDistance, handleLayer);
