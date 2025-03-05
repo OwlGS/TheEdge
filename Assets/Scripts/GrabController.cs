@@ -55,7 +55,7 @@ public class GrabController : MonoBehaviour
             if (!playerRb.useGravity)
             {
                 // При отключении гравитации обнуляем скорость
-                playerRb.velocity = Vector3.zero;
+                StopMovement();
             }
             wasUsingGravity = playerRb.useGravity;
         }
@@ -95,13 +95,21 @@ public class GrabController : MonoBehaviour
         }
     }
 
+    private void StopMovement()
+    {
+        if (playerRb != null)
+        {
+            playerRb.linearVelocity = Vector3.zero;
+            playerRb.angularVelocity = Vector3.zero;
+        }
+    }
+
     private void TryGrab()
     {
         Collider[] nearbyHandles = Physics.OverlapSphere(transform.position, grabDistance, handleLayer);
         
         if (nearbyHandles.Length > 0)
         {
-            // Находим ближайший поручень
             float closestDistance = float.MaxValue;
             Collider closestHandle = null;
             Vector3 closestPoint = Vector3.zero;
@@ -147,9 +155,7 @@ public class GrabController : MonoBehaviour
 
                 if (playerRb != null)
                 {
-                    // Полностью останавливаем движение
-                    playerRb.linearVelocity = Vector3.zero;
-                    playerRb.angularVelocity = Vector3.zero;
+                    StopMovement();
                     playerRb.constraints = RigidbodyConstraints.FreezeAll;
                 }
                 
@@ -179,9 +185,8 @@ public class GrabController : MonoBehaviour
             grabbedObject = null;
             isGrabbing = false;
             
-            // Полностью останавливаем движение перед толчком
-            playerRb.linearVelocity = Vector3.zero;
-            playerRb.angularVelocity = Vector3.zero;
+            // Останавливаем движение перед толчком
+            StopMovement();
             playerRb.constraints = RigidbodyConstraints.FreezeRotation;
             
             // Применяем силу
@@ -203,9 +208,7 @@ public class GrabController : MonoBehaviour
             
             if (playerRb != null)
             {
-                // Полностью останавливаем движение при отпускании
-                playerRb.linearVelocity = Vector3.zero;
-                playerRb.angularVelocity = Vector3.zero;
+                StopMovement();
                 playerRb.constraints = RigidbodyConstraints.FreezeRotation;
             }
             
