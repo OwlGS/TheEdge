@@ -22,12 +22,14 @@ public class GrabController : MonoBehaviour
     private PlayerMovement playerMovement;
     private Vector3 grabPoint;
     private Vector3 grabNormal;
+    private bool wasUsingGravity;
 
     private void Start()
     {
         playerRb = GetComponent<Rigidbody>();
         mainCamera = Camera.main;
         playerMovement = GetComponent<PlayerMovement>();
+        wasUsingGravity = playerRb.useGravity;
         
         if (handleLayer == 0)
         {
@@ -46,6 +48,17 @@ public class GrabController : MonoBehaviour
     private void Update()
     {
         if (mainCamera == null) return;
+
+        // Проверяем изменение состояния гравитации
+        if (wasUsingGravity != playerRb.useGravity)
+        {
+            if (!playerRb.useGravity)
+            {
+                // При отключении гравитации обнуляем скорость
+                playerRb.velocity = Vector3.zero;
+            }
+            wasUsingGravity = playerRb.useGravity;
+        }
 
         // Проверяем наличие поручней рядом с игроком
         Collider[] nearbyHandles = Physics.OverlapSphere(transform.position, grabDistance, handleLayer);
@@ -134,8 +147,10 @@ public class GrabController : MonoBehaviour
 
                 if (playerRb != null)
                 {
+                    // Полностью останавливаем движение
                     playerRb.linearVelocity = Vector3.zero;
-                    playerRb.constraints = RigidbodyConstraints.FreezePosition | RigidbodyConstraints.FreezeRotation;
+                    playerRb.angularVelocity = Vector3.zero;
+                    playerRb.constraints = RigidbodyConstraints.FreezeAll;
                 }
                 
                 if (playerMovement != null)
@@ -156,14 +171,26 @@ public class GrabController : MonoBehaviour
 
     private void TryPushOff()
     {
-        // Отталкиваемся точно в направлении камеры
         Vector3 pushDirection = mainCamera.transform.forward;
-        Release();
         
         if (playerRb != null)
         {
-            playerRb.linearVelocity = Vector3.zero; // Обнуляем текущую скорость перед толчком
+            // Сначала освобождаем от поручня
+            grabbedObject = null;
+            isGrabbing = false;
+            
+            // Полностью останавливаем движение перед толчком
+            playerRb.linearVelocity = Vector3.zero;
+            playerRb.angularVelocity = Vector3.zero;
+            playerRb.constraints = RigidbodyConstraints.FreezeRotation;
+            
+            // Применяем силу
             playerRb.AddForce(pushDirection * pushForce, ForceMode.Impulse);
+            
+            if (playerMovement != null)
+            {
+                playerMovement.enabled = true;
+            }
         }
     }
 
@@ -176,7 +203,9 @@ public class GrabController : MonoBehaviour
             
             if (playerRb != null)
             {
-                playerRb.linearVelocity = Vector3.zero; // Обнуляем скорость при отпускании
+                // Полностью останавливаем движение при отпускании
+                playerRb.linearVelocity = Vector3.zero;
+                playerRb.angularVelocity = Vector3.zero;
                 playerRb.constraints = RigidbodyConstraints.FreezeRotation;
             }
             
