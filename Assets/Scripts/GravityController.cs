@@ -5,7 +5,7 @@ public class GravityController : MonoBehaviour
 {
     private Rigidbody rb;
     private bool isGravityEnabled = true;
-
+    
     public bool IsGravityEnabled => isGravityEnabled;
 
     private void Start()
@@ -25,5 +25,8 @@ public class GravityController : MonoBehaviour
     {
         isGravityEnabled = !isGravityEnabled;
         rb.useGravity = isGravityEnabled;
+        
+        // Сообщаем системе, что произошло переключение гравитации
+        SendMessage("OnGravityToggle", isGravityEnabled, SendMessageOptions.DontRequireReceiver);
     }
 }

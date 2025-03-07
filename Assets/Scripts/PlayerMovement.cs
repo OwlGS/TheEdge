@@ -16,9 +16,8 @@ public class PlayerMovement : MonoBehaviour
     private float originalHeight;
     private bool isCrouching;
     private CapsuleCollider capsuleCollider;
-    private Vector3 currentVelocity;
+    private Vector3 savedVelocity; // Сохраненная скорость для невесомости
     private GravityController gravityController;
-    private bool wasGroundedBeforeGravityToggle = true;
 
     private void Start()
     {
@@ -31,38 +30,39 @@ public class PlayerMovement : MonoBehaviour
             cameraTransform = Camera.main.transform;
     }
 
+    // Вызывается из GravityController при переключении гравитации
+    private void OnGravityToggle(bool isGravityEnabled)
+    {
+        if (!isGravityEnabled)
+        {
+            // При отключении гравитации, сохраняем текущую скорость
+            savedVelocity = rb.linearVelocity;
+        }
+    }
+
     private void Update()
     {
-        bool wasGrounded = isGrounded;
+        // Проверка земли только при включенной гравитации
         isGrounded = rb.useGravity && Physics.Raycast(transform.position, Vector3.down, 1.1f);
-
-        // Сохраняем полную скорость при изменении состояния гравитации
-        if (rb.useGravity != gravityController.IsGravityEnabled)
-        {
-            currentVelocity = rb.linearVelocity;
-        }
         
-        // Управление движением только на земле
-        if (isGrounded)
-        {
-            float horizontalInput = Input.GetAxisRaw("Horizontal");
-            float verticalInput = Input.GetAxisRaw("Vertical");
+        // Получаем входные данные для управления
+        float horizontalInput = Input.GetAxisRaw("Horizontal");
+        float verticalInput = Input.GetAxisRaw("Vertical");
 
-            Vector3 forward = cameraTransform.forward;
-            Vector3 right = cameraTransform.right;
-            
-            forward.y = 0;
-            right.y = 0;
-            forward.Normalize();
-            right.Normalize();
+        // Вычисляем направление движения относительно камеры
+        Vector3 forward = cameraTransform.forward;
+        Vector3 right = cameraTransform.right;
+        
+        forward.y = 0;
+        right.y = 0;
+        forward.Normalize();
+        right.Normalize();
 
-            moveDirection = (forward * verticalInput + right * horizontalInput).normalized;
-        }
+        moveDirection = (forward * verticalInput + right * horizontalInput).normalized;
 
-        // Jump только при включенной гравитации
+        // Jump только при включенной гравитации и на земле
         if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
         {
-            currentVelocity = rb.linearVelocity;
             rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
         }
 
@@ -84,36 +84,65 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        foreach (ContactPoint contact in collision.contacts)
+        // Корректируем сохраненную скорость при столкновении с стенами
+        if (!rb.useGravity)
         {
-            float angle = Vector3.Angle(contact.normal, Vector3.up);
-            if (angle > 45f)
+            foreach (ContactPoint contact in collision.contacts)
             {
-                Vector3 normalVelocity = Vector3.Project(currentVelocity, contact.normal);
-                currentVelocity -= normalVelocity;
-                break;
+                float angle = Vector3.Angle(contact.normal, Vector3.up);
+                if (angle > 45f)
+                {
+                    Vector3 normalVelocity = Vector3.Project(savedVelocity, contact.normal);
+                    savedVelocity -= normalVelocity;
+                    break;
+                }
             }
         }
     }
 
     private void FixedUpdate()
     {
-        if (isGrounded)
+        if (rb.useGravity)
         {
-            // На земле с гравитацией
-            Vector3 movement = moveDirection * moveSpeed;
-            rb.linearVelocity = new Vector3(movement.x, rb.linearVelocity.y, movement.z);
-            currentVelocity = rb.linearVelocity;
-        }
-        else if (!rb.useGravity)
-        {
-            // В невесомости сохраняем полную скорость
-            rb.linearVelocity = currentVelocity;
+            if (isGrounded)
+            {
+                // На земле с гравитацией - обычное управление
+                Vector3 movement = moveDirection * moveSpeed;
+                rb.linearVelocity = new Vector3(movement.x, rb.linearVelocity.y, movement.z);
+            }
+            else
+            {
+                // В воздухе с гравитацией - сохраняем горизонтальную инерцию, но можем немного управлять
+                Vector3 movement = moveDirection * (moveSpeed * 0.2f); // Уменьшенный контроль в воздухе
+                rb.linearVelocity = new Vector3(
+                    rb.linearVelocity.x + movement.x * Time.fixedDeltaTime,
+                    rb.linearVelocity.y,
+                    rb.linearVelocity.z + movement.z * Time.fixedDeltaTime
+                );
+            }
         }
         else
         {
-            // В воздухе с гравитацией сохраняем горизонтальную скорость
-            rb.linearVelocity = new Vector3(currentVelocity.x, rb.linearVelocity.y, currentVelocity.z);
+            // В невесомости - сохраняем инерцию и добавляем немного управления
+            if (moveDirection != Vector3.zero)
+            {
+                // Небольшая сила для маневрирования в невесомости
+                rb.AddForce(moveDirection * (moveSpeed * 0.5f), ForceMode.Acceleration);
+                
+                // Ограничиваем максимальную скорость
+                if (rb.linearVelocity.magnitude > moveSpeed * 1.5f)
+                {
+                    rb.linearVelocity = rb.linearVelocity.normalized * moveSpeed * 1.5f;
+                }
+            }
+            else
+            {
+                // Если не управляем, сохраняем существующую скорость
+                rb.linearVelocity = savedVelocity;
+            }
+            
+            // Обновляем сохраненную скорость
+            savedVelocity = rb.linearVelocity;
         }
     }
 }
