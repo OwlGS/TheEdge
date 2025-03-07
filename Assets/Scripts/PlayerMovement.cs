@@ -106,43 +106,21 @@ public class PlayerMovement : MonoBehaviour
         {
             if (isGrounded)
             {
-                // На земле с гравитацией - обычное управление
+                // На земле с гравитацией - полный контроль
                 Vector3 movement = moveDirection * moveSpeed;
                 rb.linearVelocity = new Vector3(movement.x, rb.linearVelocity.y, movement.z);
             }
             else
             {
-                // В воздухе с гравитацией - сохраняем горизонтальную инерцию, но можем немного управлять
-                Vector3 movement = moveDirection * (moveSpeed * 0.2f); // Уменьшенный контроль в воздухе
-                rb.linearVelocity = new Vector3(
-                    rb.linearVelocity.x + movement.x * Time.fixedDeltaTime,
-                    rb.linearVelocity.y,
-                    rb.linearVelocity.z + movement.z * Time.fixedDeltaTime
-                );
+                // В воздухе с гравитацией - НЕТ контроля, только инерция и гравитация
+                // Сохраняем горизонтальную скорость, вертикальная скорость управляется физикой
+                // Ничего не меняем в скорости, физика сама все сделает
             }
         }
         else
         {
-            // В невесомости - сохраняем инерцию и добавляем немного управления
-            if (moveDirection != Vector3.zero)
-            {
-                // Небольшая сила для маневрирования в невесомости
-                rb.AddForce(moveDirection * (moveSpeed * 0.5f), ForceMode.Acceleration);
-                
-                // Ограничиваем максимальную скорость
-                if (rb.linearVelocity.magnitude > moveSpeed * 1.5f)
-                {
-                    rb.linearVelocity = rb.linearVelocity.normalized * moveSpeed * 1.5f;
-                }
-            }
-            else
-            {
-                // Если не управляем, сохраняем существующую скорость
-                rb.linearVelocity = savedVelocity;
-            }
-            
-            // Обновляем сохраненную скорость
-            savedVelocity = rb.linearVelocity;
+            // В невесомости - просто сохраняем инерцию, никакого управления
+            rb.linearVelocity = savedVelocity;
         }
     }
 }
