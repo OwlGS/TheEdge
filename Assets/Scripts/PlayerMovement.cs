@@ -19,6 +19,31 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 savedVelocity; // Сохраненная скорость для невесомости
     private GravityController gravityController;
 
+    // Флаг, чтобы знать, что скорость была только что обновлена
+    private bool velocityJustUpdated = false;
+
+    public void ResetSavedVelocity()
+    {
+        savedVelocity = Vector3.zero;
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector3.zero;
+        }
+        velocityJustUpdated = true;
+        Debug.Log("Saved velocity reset");
+    }
+
+    public void UpdateSavedVelocity(Vector3 newVelocity)
+    {
+        savedVelocity = newVelocity;
+        if (rb != null)
+        {
+            rb.linearVelocity = savedVelocity;
+        }
+        velocityJustUpdated = true;
+        Debug.Log($"Saved velocity updated to: {savedVelocity}, magnitude: {savedVelocity.magnitude}");
+    }
+
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -113,14 +138,21 @@ public class PlayerMovement : MonoBehaviour
             else
             {
                 // В воздухе с гравитацией - НЕТ контроля, только инерция и гравитация
-                // Сохраняем горизонтальную скорость, вертикальная скорость управляется физикой
                 // Ничего не меняем в скорости, физика сама все сделает
             }
         }
         else
         {
-            // В невесомости - просто сохраняем инерцию, никакого управления
-            rb.linearVelocity = savedVelocity;
+            // В невесомости - только если скорость не была только что обновлена
+            if (!velocityJustUpdated)
+            {
+                rb.linearVelocity = savedVelocity;
+            }
+            else
+            {
+                // Сбрасываем флаг обновления скорости
+                velocityJustUpdated = false;
+            }
         }
     }
 }

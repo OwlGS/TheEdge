@@ -88,6 +88,13 @@ public class GrabController : MonoBehaviour
         {
             playerRb.linearVelocity = Vector3.zero;
             playerRb.angularVelocity = Vector3.zero;
+            
+            // Обновляем сохраненную скорость в PlayerMovement
+            PlayerMovement playerMov = GetComponent<PlayerMovement>();
+            if (playerMov != null)
+            {
+                playerMov.ResetSavedVelocity();
+            }
         }
     }
 
@@ -172,12 +179,23 @@ public class GrabController : MonoBehaviour
             grabbedObject = null;
             isGrabbing = false;
             
-            // Останавливаем движение перед толчком
-            StopMovement();
+            // Полностью останавливаем движение перед толчком
+            playerRb.linearVelocity = Vector3.zero;
+            playerRb.angularVelocity = Vector3.zero;
             playerRb.constraints = RigidbodyConstraints.FreezeRotation;
             
-            // Применяем силу
-            playerRb.AddForce(pushDirection * pushForce, ForceMode.Impulse);
+            // Принудительно устанавливаем скорость вместо добавления силы
+            // Это гарантирует мгновенный эффект
+            playerRb.linearVelocity = pushDirection * pushForce / playerRb.mass;
+            
+            Debug.Log($"Pushed off with velocity: {playerRb.linearVelocity}, magnitude: {playerRb.linearVelocity.magnitude}");
+            
+            // Обновляем сохраненную скорость для невесомости
+            PlayerMovement playerMov = GetComponent<PlayerMovement>();
+            if (playerMov != null)
+            {
+                playerMov.UpdateSavedVelocity(playerRb.linearVelocity);
+            }
             
             if (playerMovement != null)
             {
@@ -190,13 +208,23 @@ public class GrabController : MonoBehaviour
     {
         if (grabbedObject != null)
         {
+            Debug.Log("Releasing handle");
             grabbedObject = null;
             isGrabbing = false;
             
             if (playerRb != null)
             {
-                StopMovement();
+                // Полностью останавливаем движение при отпускании
+                playerRb.linearVelocity = Vector3.zero;
+                playerRb.angularVelocity = Vector3.zero;
                 playerRb.constraints = RigidbodyConstraints.FreezeRotation;
+                
+                // Сбрасываем сохраненную скорость
+                PlayerMovement playerMov = GetComponent<PlayerMovement>();
+                if (playerMov != null)
+                {
+                    playerMov.ResetSavedVelocity();
+                }
             }
             
             if (playerMovement != null)
