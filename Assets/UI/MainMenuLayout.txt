@@ -1,0 +1,108 @@
+MAIN MENU UI STRUCTURE
+
+Canvas (Scale With Screen Size, Match Width Or Height 0.5)
+|
+|-- BackgroundImage (Image - Full screen game artwork or scenery)
+|
+|-- MainMenuPanel (Panel)
+|   |
+|   |-- GameTitle (Text - "THE EDGE")
+|   |
+|   |-- ButtonsContainer (Vertical Layout Group)
+|       |
+|       |-- StartGameButton (Button - "START GAME")
+|       |
+|       |-- SettingsButton (Button - "SETTINGS")
+|       |
+|       |-- ControlsButton (Button - "CONTROLS")
+|       |
+|       |-- CreditsButton (Button - "CREDITS")
+|       |
+|       |-- QuitButton (Button - "QUIT GAME")
+|
+|-- SettingsPanel (Panel) [Initially Inactive]
+|   |
+|   |-- Title (Text - "SETTINGS")
+|   |
+|   |-- Tabs
+|   |   |-- GraphicsButton (Button - "GRAPHICS")
+|   |   |-- AudioButton (Button - "AUDIO")
+|   |   |-- GameplayButton (Button - "GAMEPLAY")
+|   |
+|   |-- ContentContainer (Panel)
+|   |   |
+|   |   |-- GraphicsContent (Panel)
+|   |   |   |-- QualityDropdown (Dropdown - Quality Levels)
+|   |   |   |   |-- Label (Text - "Quality:")
+|   |   |   |
+|   |   |   |-- ResolutionDropdown (Dropdown - Resolutions)
+|   |   |   |   |-- Label (Text - "Resolution:")
+|   |   |   |
+|   |   |   |-- FullscreenToggle (Toggle)
+|   |   |       |-- Label (Text - "Fullscreen:")
+|   |   |
+|   |   |-- AudioContent (Panel) [Initially Inactive]
+|   |   |   |-- MusicVolumeSlider (Slider 0-1)
+|   |   |   |   |-- Label (Text - "Music Volume:")
+|   |   |   |
+|   |   |   |-- SFXVolumeSlider (Slider 0-1)
+|   |   |       |-- Label (Text - "SFX Volume:")
+|   |   |
+|   |   |-- GameplayContent (Panel) [Initially Inactive]
+|   |       |-- SensitivitySlider (Slider 0.1-2)
+|   |           |-- Label (Text - "Mouse Sensitivity:")
+|   |
+|   |-- BackButton (Button - "BACK")
+|
+|-- ControlsPanel (Panel) [Initially Inactive]
+|   |
+|   |-- Title (Text - "CONTROLS")
+|   |
+|   |-- ControlsContainer (Scroll View)
+|   |   |-- Content (Vertical Layout Group)
+|   |       |-- WASD (Text - "WASD - Movement")
+|   |       |-- Space (Text - "SPACE - Jump")
+|   |       |-- MouseLook (Text - "MOUSE - Look Around")
+|   |       |-- LeftClick (Text - "LEFT CLICK - Grab Handle")
+|   |       |-- RightClick (Text - "RIGHT CLICK - Push Off")
+|   |       |-- G (Text - "G - Toggle Gravity")
+|   |       |-- Ctrl (Text - "CTRL - Crouch")
+|   |       |-- Esc (Text - "ESC - Pause Menu")
+|   |
+|   |-- BackButton (Button - "BACK")
+|
+|-- CreditsPanel (Panel) [Initially Inactive]
+    |
+    |-- Title (Text - "CREDITS")
+    |
+    |-- CreditsScrollView (Scroll View)
+    |   |-- Content (Vertical Layout Group)
+    |       |-- DevelopmentTeam (Text - "DEVELOPMENT TEAM")
+    |       |-- Developer1 (Text - "Lead Developer: [Your Name]")
+    |       |-- Spacer1 (Space)
+    |       |-- ArtTeam (Text - "ART & DESIGN")
+    |       |-- Artist1 (Text - "Lead Artist: [Artist Name]")
+    |       |-- Spacer2 (Space)
+    |       |-- SoundTeam (Text - "SOUND & MUSIC")
+    |       |-- SoundDesigner (Text - "Sound Design: [Sound Designer Name]")
+    |       |-- Composer (Text - "Music Composer: [Composer Name]")
+    |       |-- Spacer3 (Space)
+    |       |-- SpecialThanks (Text - "SPECIAL THANKS")
+    |       |-- Thanks1 (Text - "Unity Technologies")
+    |       |-- Thanks2 (Text - "All our beta testers")
+    |
+    |-- BackButton (Button - "BACK")
+
+STYLE GUIDELINES:
+- Use a visually appealing background image that represents the game
+- Use a stylized font for the game title
+- Apply consistent padding and spacing between UI elements
+- Use subtle animations for transitions between menu screens
+- Implement button hover/press effects
+- Ensure appropriate contrast between text and backgrounds
+- Make the UI navigable with controller/keyboard for accessibility
+
+SCRIPT CONNECTIONS:
+- Connect all buttons to appropriate methods in MainMenuController.cs
+- Link UI components (sliders, dropdowns, toggles) to serialized fields
+- Ensure all panels except MainMenuPanel start as inactive 

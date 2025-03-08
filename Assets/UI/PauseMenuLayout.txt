@@ -1,0 +1,87 @@
+PAUSE MENU UI STRUCTURE
+
+Canvas (Scale With Screen Size, Match Width Or Height 0.5)
+|
+|-- PauseMenuUI (Panel with semi-transparent background)
+|   |
+|   |-- Title (Text - "PAUSE")
+|   |
+|   |-- ResumeButton (Button - "RESUME")
+|   |
+|   |-- SettingsButton (Button - "SETTINGS")
+|   |
+|   |-- ControlsButton (Button - "CONTROLS")
+|   |
+|   |-- MainMenuButton (Button - "MAIN MENU")
+|   |
+|   |-- QuitButton (Button - "QUIT GAME")
+|
+|-- SettingsMenuUI (Panel with semi-transparent background) [Initially Inactive]
+|   |
+|   |-- Title (Text - "SETTINGS")
+|   |
+|   |-- Tabs
+|   |   |-- GraphicsButton (Button - "GRAPHICS")
+|   |   |-- AudioButton (Button - "AUDIO")
+|   |   |-- GameplayButton (Button - "GAMEPLAY")
+|   |
+|   |-- BackButton (Button - "BACK")
+|
+|-- GraphicsMenuUI (Panel) [Initially Inactive]
+|   |
+|   |-- Title (Text - "GRAPHICS SETTINGS")
+|   |
+|   |-- QualityDropdown (Dropdown - Quality Levels)
+|   |   |-- Label (Text - "Quality:")
+|   |
+|   |-- ResolutionDropdown (Dropdown - Resolutions)
+|   |   |-- Label (Text - "Resolution:")
+|   |
+|   |-- FullscreenToggle (Toggle)
+|   |   |-- Label (Text - "Fullscreen:")
+|   |
+|   |-- BackButton (Button - "BACK")
+|
+|-- AudioMenuUI (Panel) [Initially Inactive]
+|   |
+|   |-- Title (Text - "AUDIO SETTINGS")
+|   |
+|   |-- MusicVolumeSlider (Slider 0-1)
+|   |   |-- Label (Text - "Music Volume:")
+|   |
+|   |-- SFXVolumeSlider (Slider 0-1)
+|   |   |-- Label (Text - "SFX Volume:")
+|   |
+|   |-- BackButton (Button - "BACK")
+|
+|-- ControlsMenuUI (Panel) [Initially Inactive]
+    |
+    |-- Title (Text - "CONTROLS")
+    |
+    |-- SensitivitySlider (Slider 0.1-2)
+    |   |-- Label (Text - "Mouse Sensitivity:")
+    |
+    |-- ControlsList (VerticalLayoutGroup)
+    |   |-- WASD (Text - "WASD - Movement")
+    |   |-- Space (Text - "SPACE - Jump")
+    |   |-- MouseLook (Text - "MOUSE - Look Around")
+    |   |-- LeftClick (Text - "LEFT CLICK - Grab Handle")
+    |   |-- RightClick (Text - "RIGHT CLICK - Push Off")
+    |   |-- G (Text - "G - Toggle Gravity")
+    |   |-- Ctrl (Text - "CTRL - Crouch")
+    |   |-- Esc (Text - "ESC - Pause Menu")
+    |
+    |-- BackButton (Button - "BACK")
+
+STYLE GUIDELINES:
+- Use a dark, semi-transparent background for panels
+- Use a clean, readable font (e.g., Roboto, Arial)
+- Add appropriate padding and spacing between elements
+- Use consistent button sizes and styles
+- Ensure the UI is navigable with controller/keyboard for accessibility
+- Use subtle animations or transitions between menu screens
+
+SCRIPT CONNECTIONS:
+- Connect all buttons to appropriate methods in PauseMenu.cs
+- Link UI components (sliders, dropdowns, toggles) to serialized fields in PauseMenu.cs
+- Ensure all panels except PauseMenuUI start as inactive 
