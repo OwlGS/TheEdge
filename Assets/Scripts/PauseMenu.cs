@@ -37,6 +37,27 @@ public class PauseMenu : MonoBehaviour
 
     private void Start()
     {
+        // Убедимся, что все кнопки внутри контейнера активны, даже если сам контейнер неактивен
+        if (pauseButtonsContainer != null)
+        {
+            // Временно активируем контейнер, если он неактивен
+            bool wasActive = pauseButtonsContainer.activeSelf;
+            if (!wasActive)
+                pauseButtonsContainer.SetActive(true);
+            
+            // Активируем все кнопки
+            Button[] buttons = pauseButtonsContainer.GetComponentsInChildren<Button>(true);
+            foreach (Button button in buttons)
+            {
+                button.gameObject.SetActive(true);
+                Debug.Log($"Initialized button: {button.name}");
+            }
+            
+            // Возвращаем исходное состояние
+            if (!wasActive)
+                pauseButtonsContainer.SetActive(false);
+        }
+        
         // Ensure menu is closed on start
         pauseMenuUI.SetActive(false);
         
@@ -54,6 +75,20 @@ public class PauseMenu : MonoBehaviour
         Debug.Log("PauseMenu initialized. UI elements deactivated.");
     }
 
+    private void LogButtonStates(string context)
+    {
+        if (pauseButtonsContainer != null)
+        {
+            Debug.Log($"[{context}] pauseButtonsContainer active: {pauseButtonsContainer.activeSelf}");
+            
+            Button[] buttons = pauseButtonsContainer.GetComponentsInChildren<Button>(true);
+            foreach (Button button in buttons)
+            {
+                Debug.Log($"[{context}] Button {button.name} active: {button.gameObject.activeSelf}, enabled: {button.enabled}");
+            }
+        }
+    }
+
     void Update()
     {
         // Toggle pause menu with ESC key
@@ -61,12 +96,15 @@ public class PauseMenu : MonoBehaviour
         {
             if (isPaused)
             {
+                LogButtonStates("Before Resume");
                 Resume();
                 Debug.Log("Game resumed");
             }
             else
             {
+                LogButtonStates("Before Pause");
                 Pause();
+                LogButtonStates("After Pause");
                 Debug.Log("Game paused");
             }
         }
@@ -133,6 +171,9 @@ public class PauseMenu : MonoBehaviour
         // Hide menu text and background
         if (menuText != null) menuText.SetActive(false);
         if (menuBackground != null) menuBackground.SetActive(false);
+        
+        // Важно: не деактивируем сами кнопки, а только контейнер
+        // Это позволит им оставаться активными для следующего открытия меню
         if (pauseButtonsContainer != null) pauseButtonsContainer.SetActive(false);
         
         CloseAllSubmenus();
@@ -180,6 +221,15 @@ public class PauseMenu : MonoBehaviour
         if (pauseButtonsContainer != null) 
         {
             pauseButtonsContainer.SetActive(true);
+            
+            // Активируем все кнопки внутри контейнера
+            Button[] buttons = pauseButtonsContainer.GetComponentsInChildren<Button>(true);
+            foreach (Button button in buttons)
+            {
+                button.gameObject.SetActive(true);
+                Debug.Log($"Activated button: {button.name}");
+            }
+            
             Debug.Log("Pause buttons container activated");
         }
         else
@@ -221,6 +271,7 @@ public class PauseMenu : MonoBehaviour
 
     public void CloseAllSubmenus()
     {
+        // Закрываем все подменю, но не трогаем основные кнопки
         settingsMenuUI.SetActive(false);
         controlsMenuUI.SetActive(false);
         graphicsMenuUI.SetActive(false);
@@ -229,6 +280,21 @@ public class PauseMenu : MonoBehaviour
         // Закрываем меню сохранения, если оно существует
         if (saveMenuUI != null)
             saveMenuUI.SetActive(false);
+        
+        // При закрытии подменю убедимся, что основные кнопки видимы
+        // (если контейнер кнопок активен)
+        if (pauseButtonsContainer != null && pauseButtonsContainer.activeSelf)
+        {
+            Button[] buttons = pauseButtonsContainer.GetComponentsInChildren<Button>(true);
+            foreach (Button button in buttons)
+            {
+                // Не меняем состояние кнопок подменю
+                if (button.transform.parent == pauseButtonsContainer.transform)
+                {
+                    button.gameObject.SetActive(true);
+                }
+            }
+        }
     }
 
     public void OpenSettings()
