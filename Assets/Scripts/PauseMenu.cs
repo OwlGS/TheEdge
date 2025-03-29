@@ -14,6 +14,7 @@ public class PauseMenu : MonoBehaviour
     [SerializeField] private GameObject controlsMenuUI;
     [SerializeField] private GameObject graphicsMenuUI;
     [SerializeField] private GameObject audioMenuUI;
+    [SerializeField] private GameObject saveMenuUI; // Меню сохранения игры
 
     [Header("Settings Components")]
     [SerializeField] private Slider musicVolumeSlider;
@@ -26,6 +27,13 @@ public class PauseMenu : MonoBehaviour
     private Resolution[] resolutions;
     private bool isPaused = false;
     private float defaultTimeScale = 1.0f;
+    private InGameMenuManager inGameMenuManager;
+
+    private void Awake()
+    {
+        // Получаем компонент InGameMenuManager, если он присутствует
+        inGameMenuManager = GetComponent<InGameMenuManager>();
+    }
 
     private void Start()
     {
@@ -211,12 +219,16 @@ public class PauseMenu : MonoBehaviour
             thirdPersonCamera.enabled = enable;
     }
 
-    void CloseAllSubmenus()
+    public void CloseAllSubmenus()
     {
         settingsMenuUI.SetActive(false);
         controlsMenuUI.SetActive(false);
         graphicsMenuUI.SetActive(false);
         audioMenuUI.SetActive(false);
+        
+        // Закрываем меню сохранения, если оно существует
+        if (saveMenuUI != null)
+            saveMenuUI.SetActive(false);
     }
 
     public void OpenSettings()
@@ -261,6 +273,47 @@ public class PauseMenu : MonoBehaviour
     public void CloseAudio()
     {
         audioMenuUI.SetActive(false);
+    }
+
+    public void OpenSaveMenu()
+    {
+        CloseAllSubmenus();
+        
+        // Используем InGameMenuManager для открытия меню сохранения, если он есть
+        if (inGameMenuManager != null)
+        {
+            inGameMenuManager.OpenSaveMenu();
+        }
+        else if (saveMenuUI != null)
+        {
+            saveMenuUI.SetActive(true);
+        }
+    }
+
+    public void CloseSaveMenu()
+    {
+        if (inGameMenuManager != null)
+        {
+            inGameMenuManager.CloseSaveMenu();
+        }
+        else if (saveMenuUI != null)
+        {
+            saveMenuUI.SetActive(false);
+        }
+    }
+
+    public void SaveGame(int saveSlot)
+    {
+        // Проверяем наличие менеджера сохранений
+        if (GameSaveManager.Instance != null)
+        {
+            GameSaveManager.Instance.SaveGame(saveSlot);
+            Debug.Log($"Игра сохранена в слот {saveSlot}");
+        }
+        else
+        {
+            Debug.LogError("GameSaveManager не найден в сцене!");
+        }
     }
 
     public void LoadMainMenu()
