@@ -18,6 +18,7 @@ public class PlayerMovement : MonoBehaviour
     private CapsuleCollider capsuleCollider;
     private Vector3 savedVelocity; // Сохраненная скорость для невесомости
     private GravityController gravityController;
+    private FirstPersonCamera firstPersonCamera;
 
     // Флаг, чтобы знать, что скорость была только что обновлена
     private bool velocityJustUpdated = false;
@@ -51,8 +52,21 @@ public class PlayerMovement : MonoBehaviour
         originalHeight = capsuleCollider.height;
         gravityController = GetComponent<GravityController>();
         
+        // Ищем камеру, если она не назначена
         if (cameraTransform == null)
-            cameraTransform = Camera.main.transform;
+        {
+            Camera mainCamera = Camera.main;
+            if (mainCamera != null)
+            {
+                cameraTransform = mainCamera.transform;
+                // Пытаемся получить компонент FirstPersonCamera
+                firstPersonCamera = mainCamera.GetComponent<FirstPersonCamera>();
+            }
+        }
+        else
+        {
+            firstPersonCamera = cameraTransform.GetComponent<FirstPersonCamera>();
+        }
     }
 
     // Вызывается из GravityController при переключении гравитации
@@ -75,9 +89,10 @@ public class PlayerMovement : MonoBehaviour
         float verticalInput = Input.GetAxisRaw("Vertical");
 
         // Вычисляем направление движения относительно камеры
-        Vector3 forward = cameraTransform.forward;
-        Vector3 right = cameraTransform.right;
+        Vector3 forward = transform.forward; // В FPS используем направление персонажа
+        Vector3 right = transform.right;
         
+        // Обнуляем вертикальную составляющую, чтобы двигаться только в горизонтальной плоскости
         forward.y = 0;
         right.y = 0;
         forward.Normalize();
@@ -98,11 +113,23 @@ public class PlayerMovement : MonoBehaviour
             {
                 capsuleCollider.height = crouchHeight;
                 isCrouching = true;
+                
+                // Если используем камеру от первого лица, смещаем её вниз
+                if (firstPersonCamera != null)
+                {
+                    // Можно добавить логику для смещения камеры вниз при приседании
+                }
             }
             else
             {
                 capsuleCollider.height = originalHeight;
                 isCrouching = false;
+                
+                // Возвращаем камеру в исходное положение
+                if (firstPersonCamera != null)
+                {
+                    // Можно добавить логику для возврата камеры в исходное положение
+                }
             }
         }
     }

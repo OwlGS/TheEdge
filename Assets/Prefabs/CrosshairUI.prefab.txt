@@ -1,0 +1,44 @@
+// Инструкция по созданию прицела (CrosshairUI) в Unity Editor:
+
+/*
+1. Создаем Canvas для UI:
+   - GameObject > UI > Canvas
+   - Убедиться, что Render Mode установлен на "Screen Space - Overlay"
+   - Canvas Scaler - Scale With Screen Size, Reference Resolution 1920x1080
+
+2. Добавляем изображение прицела:
+   - Создаем дочерний объект: Right-click на Canvas > UI > Image
+   - Называем его "Crosshair"
+   - Устанавливаем Rect Transform в центр экрана (anchors в центре)
+   - Size: Width = 5, Height = 5
+   - Устанавливаем спрайт круга (можно использовать CircleSprite или создать свой)
+   - Если нет готового спрайта круга:
+     * Создаем новую текстуру 128x128
+     * Рисуем белый круг в центре
+     * Устанавливаем Texture Type как "Sprite (2D and UI)"
+     * Импортируем и используем как спрайт для Image
+
+3. Прозрачность и цвет:
+   - Устанавливаем цвет: белый (255, 255, 255, 180) - немного прозрачный
+   - Размер настраиваем по желанию (рекомендуется 5-10 пикселей)
+
+4. Добавляем компонент скрипта:
+   - Add Component > Scripts > CrosshairUI
+   - Перетаскиваем компонент Image в поле crosshairImage
+   - Настраиваем цвет и размер:
+     * Crosshair Color = белый или светло-серый
+     * Crosshair Size = 5
+     * Interactable Color = зеленый или другой контрастный
+     * Interactable Size = 7
+
+5. Сохраняем как префаб:
+   - Drag and drop Crosshair object из иерархии в папку Prefabs
+   - Называем его "CrosshairUI"
+*/
+
+// Пример иерархии в Unity:
+// Canvas
+// └── Crosshair (Image + CrosshairUI script)
+
+// Примечание: Crosshair должен быть последним элементом в Canvas,
+// чтобы он всегда отображался поверх других UI элементов 

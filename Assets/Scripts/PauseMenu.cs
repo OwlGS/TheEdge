@@ -264,9 +264,23 @@ public class PauseMenu : MonoBehaviour
             grabController.enabled = enable;
             
         // Disable camera controls when paused
-        ThirdPersonCamera thirdPersonCamera = FindObjectOfType<ThirdPersonCamera>();
-        if (thirdPersonCamera != null)
-            thirdPersonCamera.enabled = enable;
+        FirstPersonCamera firstPersonCamera = FindObjectOfType<FirstPersonCamera>();
+        if (firstPersonCamera != null)
+            firstPersonCamera.enabled = enable;
+        
+        // Управление курсором
+        if (enable)
+        {
+            // Скрываем и блокируем курсор при возобновлении игры
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
+        else
+        {
+            // Показываем и разблокируем курсор при паузе
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
     }
 
     public void CloseAllSubmenus()
@@ -441,11 +455,10 @@ public class PauseMenu : MonoBehaviour
         PlayerPrefs.SetFloat("Sensitivity", sensitivity);
         
         // Apply to camera controller if it has a sensitivity property
-        ThirdPersonCamera cameraController = FindObjectOfType<ThirdPersonCamera>();
+        FirstPersonCamera cameraController = FindObjectOfType<FirstPersonCamera>();
         if (cameraController != null)
         {
-            // Assuming the camera has a public property to set sensitivity
-            // cameraController.sensitivity = sensitivity;
+            cameraController.SetSensitivity(sensitivity);
         }
     }
 }

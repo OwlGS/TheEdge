@@ -12,6 +12,9 @@ public class GrabController : MonoBehaviour
     [SerializeField] private float pushForce = 10f;
     [SerializeField] private float maxPushDistance = 10f;
     
+    [Header("UI References")]
+    [SerializeField] private CrosshairUI crosshair;
+    
     [Header("Debug")]
     [SerializeField] private bool showDebugRay = true;
     
@@ -41,23 +44,20 @@ public class GrabController : MonoBehaviour
                 Debug.LogError("Layer 'Handle' not found!");
             }
         }
+        
+        // Найти компонент CrosshairUI, если он не назначен
+        if (crosshair == null)
+        {
+            crosshair = FindObjectOfType<CrosshairUI>();
+        }
     }
 
     private void Update()
     {
         if (mainCamera == null) return;
 
-        // Проверяем наличие поручней рядом с игроком
-        Collider[] nearbyHandles = Physics.OverlapSphere(transform.position, grabDistance, handleLayer);
-        
-        if (showDebugRay && nearbyHandles.Length > 0)
-        {
-            foreach (Collider handle in nearbyHandles)
-            {
-                Vector3 closestPoint = handle.ClosestPoint(transform.position);
-                Debug.DrawLine(transform.position, closestPoint, Color.yellow);
-            }
-        }
+        // Проверка интерактивных объектов перед игроком для прицела
+        CheckInteractiveObjects();
         
         if (Input.GetMouseButtonDown(0))
         {
@@ -82,6 +82,40 @@ public class GrabController : MonoBehaviour
         }
     }
 
+    private void CheckInteractiveObjects()
+    {
+        // В режиме от первого лица используем луч из центра экрана
+        Ray ray = mainCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
+        RaycastHit hit;
+        
+        if (Physics.Raycast(ray, out hit, grabDistance, handleLayer))
+        {
+            // Есть интерактивный объект под прицелом
+            if (crosshair != null)
+            {
+                crosshair.SetCrosshairInteractable();
+            }
+            
+            if (showDebugRay)
+            {
+                Debug.DrawLine(ray.origin, hit.point, Color.green);
+            }
+        }
+        else
+        {
+            // Нет интерактивного объекта под прицелом
+            if (crosshair != null)
+            {
+                crosshair.SetCrosshairDefault();
+            }
+            
+            if (showDebugRay)
+            {
+                Debug.DrawRay(ray.origin, ray.direction * grabDistance, Color.yellow);
+            }
+        }
+    }
+
     private void StopMovement()
     {
         if (playerRb != null)
@@ -100,6 +134,17 @@ public class GrabController : MonoBehaviour
 
     private void TryGrab()
     {
+        Ray ray = mainCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
+        RaycastHit hit;
+        
+        // Сначала пробуем точный луч из центра экрана
+        if (Physics.Raycast(ray, out hit, grabDistance, handleLayer))
+        {
+            HandleGrab(hit.collider.gameObject, hit.point, hit.normal);
+            return;
+        }
+        
+        // Проверяем наличие поручней рядом с игроком как запасной вариант
         Collider[] nearbyHandles = Physics.OverlapSphere(transform.position, grabDistance, handleLayer);
         
         if (nearbyHandles.Length > 0)
@@ -107,6 +152,7 @@ public class GrabController : MonoBehaviour
             float closestDistance = float.MaxValue;
             Collider closestHandle = null;
             Vector3 closestPoint = Vector3.zero;
+            Vector3 closestNormal = Vector3.zero;
             
             foreach (Collider handle in nearbyHandles)
             {
@@ -118,46 +164,52 @@ public class GrabController : MonoBehaviour
                     closestDistance = distance;
                     closestHandle = handle;
                     closestPoint = point;
+                    
+                    // Пытаемся получить нормаль
+                    RaycastHit handleHit;
+                    if (Physics.Raycast(transform.position, point - transform.position, out handleHit, grabDistance, handleLayer))
+                    {
+                        closestNormal = handleHit.normal;
+                    }
+                    else
+                    {
+                        closestNormal = (transform.position - point).normalized;
+                    }
                 }
             }
 
             if (closestHandle != null)
             {
-                grabbedObject = closestHandle.gameObject;
-                isGrabbing = true;
-                
-                // Вычисляем нормаль от ближайшей точки
-                RaycastHit hit;
-                if (Physics.Raycast(closestPoint + Vector3.up * 0.1f, Vector3.down, out hit, 0.2f, handleLayer))
-                {
-                    grabNormal = hit.normal;
-                }
-                else
-                {
-                    grabNormal = (transform.position - closestPoint).normalized;
-                }
-                
-                grabPoint = closestPoint + (grabNormal * grabOffset);
-                
-                // Поворачиваем игрока лицом к поверхности захвата
-                Vector3 lookDirection = -grabNormal;
-                lookDirection.y = 0;
-                if (lookDirection != Vector3.zero)
-                {
-                    transform.rotation = Quaternion.LookRotation(lookDirection);
-                }
-
-                if (playerRb != null)
-                {
-                    StopMovement();
-                    playerRb.constraints = RigidbodyConstraints.FreezeAll;
-                }
-                
-                if (playerMovement != null)
-                {
-                    playerMovement.enabled = false;
-                }
+                HandleGrab(closestHandle.gameObject, closestPoint, closestNormal);
             }
+        }
+    }
+    
+    private void HandleGrab(GameObject handle, Vector3 point, Vector3 normal)
+    {
+        grabbedObject = handle;
+        isGrabbing = true;
+        
+        grabNormal = normal;
+        grabPoint = point + (grabNormal * grabOffset);
+        
+        // Поворачиваем игрока лицом к поверхности захвата
+        Vector3 lookDirection = -grabNormal;
+        lookDirection.y = 0;
+        if (lookDirection != Vector3.zero)
+        {
+            transform.rotation = Quaternion.LookRotation(lookDirection);
+        }
+
+        if (playerRb != null)
+        {
+            StopMovement();
+            playerRb.constraints = RigidbodyConstraints.FreezeAll;
+        }
+        
+        if (playerMovement != null)
+        {
+            playerMovement.enabled = false;
         }
     }
 
