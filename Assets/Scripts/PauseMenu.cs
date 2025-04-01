@@ -10,18 +10,30 @@ public class PauseMenu : MonoBehaviour
     [SerializeField] private GameObject menuText; // Текст "menu"
     [SerializeField] private GameObject menuBackground; // Фон текста "menu"
     [SerializeField] private GameObject pauseButtonsContainer; // Контейнер для всех кнопок меню паузы
-    [SerializeField] private GameObject settingsMenuUI;
-    [SerializeField] private GameObject controlsMenuUI;
-    [SerializeField] private GameObject graphicsMenuUI;
-    [SerializeField] private GameObject audioMenuUI;
+    
+    [Header("Settings Panels")]
+    [SerializeField] private GameObject settingsMenuUI; // Основная панель настроек
+    [SerializeField] private GameObject settingsCategoryPanel; // Панель с категориями настроек
+    [SerializeField] private GameObject graphicsSettingsPanel; // Панель настроек графики
+    [SerializeField] private GameObject audioSettingsPanel; // Панель настроек звука
+    [SerializeField] private GameObject brightnessSettingsPanel; // Панель настроек яркости
+    [SerializeField] private GameObject controlsSettingsPanel; // Панель настроек управления
     [SerializeField] private GameObject saveMenuUI; // Меню сохранения игры
 
     [Header("Settings Components")]
+    // Звук
     [SerializeField] private Slider musicVolumeSlider;
     [SerializeField] private Slider sfxVolumeSlider;
+    
+    // Графика
     [SerializeField] private Dropdown qualityDropdown;
     [SerializeField] private Toggle fullscreenToggle;
     [SerializeField] private Dropdown resolutionDropdown;
+    
+    // Яркость
+    [SerializeField] private Slider brightnessSlider;
+    
+    // Управление
     [SerializeField] private Slider sensitivitySlider;
 
     private Resolution[] resolutions;
@@ -113,14 +125,20 @@ public class PauseMenu : MonoBehaviour
     private void InitializeSettings()
     {
         // Initialize quality settings
-        qualityDropdown.ClearOptions();
-        List<string> qualityOptions = new List<string>(QualitySettings.names);
-        qualityDropdown.AddOptions(qualityOptions);
-        qualityDropdown.value = QualitySettings.GetQualityLevel();
-        qualityDropdown.RefreshShownValue();
+        if (qualityDropdown != null)
+        {
+            qualityDropdown.ClearOptions();
+            List<string> qualityOptions = new List<string>(QualitySettings.names);
+            qualityDropdown.AddOptions(qualityOptions);
+            qualityDropdown.value = QualitySettings.GetQualityLevel();
+            qualityDropdown.RefreshShownValue();
+        }
 
         // Initialize fullscreen setting
-        fullscreenToggle.isOn = Screen.fullScreen;
+        if (fullscreenToggle != null)
+        {
+            fullscreenToggle.isOn = Screen.fullScreen;
+        }
 
         // Initialize resolutions
         InitializeResolutions();
@@ -129,16 +147,22 @@ public class PauseMenu : MonoBehaviour
         // Assume we have PlayerPrefs for these values or default values
         float musicVolume = PlayerPrefs.GetFloat("MusicVolume", 0.75f);
         float sfxVolume = PlayerPrefs.GetFloat("SFXVolume", 0.75f);
-        musicVolumeSlider.value = musicVolume;
-        sfxVolumeSlider.value = sfxVolume;
+        if (musicVolumeSlider != null) musicVolumeSlider.value = musicVolume;
+        if (sfxVolumeSlider != null) sfxVolumeSlider.value = sfxVolume;
 
         // Initialize sensitivity
         float sensitivity = PlayerPrefs.GetFloat("Sensitivity", 1.0f);
-        sensitivitySlider.value = sensitivity;
+        if (sensitivitySlider != null) sensitivitySlider.value = sensitivity;
+        
+        // Initialize brightness
+        float brightness = PlayerPrefs.GetFloat("Brightness", 1.0f);
+        if (brightnessSlider != null) brightnessSlider.value = brightness;
     }
 
     private void InitializeResolutions()
     {
+        if (resolutionDropdown == null) return;
+        
         resolutions = Screen.resolutions;
         resolutionDropdown.ClearOptions();
 
@@ -285,11 +309,13 @@ public class PauseMenu : MonoBehaviour
 
     public void CloseAllSubmenus()
     {
-        // Закрываем все подменю, но не трогаем основные кнопки
-        settingsMenuUI.SetActive(false);
-        controlsMenuUI.SetActive(false);
-        graphicsMenuUI.SetActive(false);
-        audioMenuUI.SetActive(false);
+        // Закрываем все подменю настроек
+        if (settingsMenuUI != null) settingsMenuUI.SetActive(false);
+        if (settingsCategoryPanel != null) settingsCategoryPanel.SetActive(false);
+        if (graphicsSettingsPanel != null) graphicsSettingsPanel.SetActive(false);
+        if (audioSettingsPanel != null) audioSettingsPanel.SetActive(false);
+        if (brightnessSettingsPanel != null) brightnessSettingsPanel.SetActive(false);
+        if (controlsSettingsPanel != null) controlsSettingsPanel.SetActive(false);
         
         // Закрываем меню сохранения, если оно существует
         if (saveMenuUI != null)
@@ -311,49 +337,67 @@ public class PauseMenu : MonoBehaviour
         }
     }
 
+    #region Settings Menu
+    
     public void OpenSettings()
     {
+        // Закрываем все подменю для начала
         CloseAllSubmenus();
+        
+        // Открываем меню настроек и панель категорий
         settingsMenuUI.SetActive(true);
+        settingsCategoryPanel.SetActive(true);
     }
-
+    
     public void CloseSettings()
     {
         settingsMenuUI.SetActive(false);
+        CloseAllSettingSubpanels();
     }
-
-    public void OpenControls()
+    
+    private void CloseAllSettingSubpanels()
     {
-        CloseAllSubmenus();
-        controlsMenuUI.SetActive(true);
+        if (graphicsSettingsPanel != null) graphicsSettingsPanel.SetActive(false);
+        if (audioSettingsPanel != null) audioSettingsPanel.SetActive(false);
+        if (brightnessSettingsPanel != null) brightnessSettingsPanel.SetActive(false);
+        if (controlsSettingsPanel != null) controlsSettingsPanel.SetActive(false);
     }
-
-    public void CloseControls()
+    
+    public void OpenGraphicsSettings()
     {
-        controlsMenuUI.SetActive(false);
+        settingsCategoryPanel.SetActive(false);
+        CloseAllSettingSubpanels();
+        graphicsSettingsPanel.SetActive(true);
     }
-
-    public void OpenGraphics()
+    
+    public void OpenAudioSettings()
     {
-        CloseAllSubmenus();
-        graphicsMenuUI.SetActive(true);
+        settingsCategoryPanel.SetActive(false);
+        CloseAllSettingSubpanels();
+        audioSettingsPanel.SetActive(true);
     }
-
-    public void CloseGraphics()
+    
+    public void OpenBrightnessSettings()
     {
-        graphicsMenuUI.SetActive(false);
+        settingsCategoryPanel.SetActive(false);
+        CloseAllSettingSubpanels();
+        brightnessSettingsPanel.SetActive(true);
     }
-
-    public void OpenAudio()
+    
+    public void OpenControlsSettings()
     {
-        CloseAllSubmenus();
-        audioMenuUI.SetActive(true);
+        settingsCategoryPanel.SetActive(false);
+        CloseAllSettingSubpanels();
+        controlsSettingsPanel.SetActive(true);
     }
-
-    public void CloseAudio()
+    
+    public void BackToSettingsCategories()
     {
-        audioMenuUI.SetActive(false);
+        CloseAllSettingSubpanels();
+        settingsCategoryPanel.SetActive(true);
     }
+    
+    #endregion
 
     public void OpenSaveMenu()
     {
@@ -414,6 +458,8 @@ public class PauseMenu : MonoBehaviour
 
     public void SetResolution(int resolutionIndex)
     {
+        if (resolutionIndex < 0 || resolutionIndex >= resolutions.Length) return;
+        
         Resolution resolution = resolutions[resolutionIndex];
         Screen.SetResolution(resolution.width, resolution.height, Screen.fullScreen, resolution.refreshRate);
         PlayerPrefs.SetInt("ResolutionIndex", resolutionIndex);
@@ -460,5 +506,14 @@ public class PauseMenu : MonoBehaviour
         {
             cameraController.SetSensitivity(sensitivity);
         }
+    }
+    
+    public void SetBrightness(float brightness)
+    {
+        // Сохраняем значение яркости
+        PlayerPrefs.SetFloat("Brightness", brightness);
+        
+        // Здесь можно добавить код для настройки яркости в игре
+        // Например, через пост-обработку или настройку экспозиции камеры
     }
 }
